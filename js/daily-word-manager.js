@@ -133,7 +133,16 @@ class DailyWordManager {
     }
 
     hasPlayedToday() {
-        const todayState = this.loadGameState();
+        const currentDate = this.getTodaysDate();
+        const todayState = this.loadGameState(currentDate);
+        
+        // Debug logging
+        console.log('Checking if played today:', {
+            currentDate,
+            todayState,
+            hasState: todayState !== null
+        });
+        
         // Check if game state exists AND if it's actually completed
         return todayState !== null && (todayState.won !== undefined || todayState.attempts >= 6);
     }

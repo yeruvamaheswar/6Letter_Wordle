@@ -23,12 +23,23 @@ class WordleGame {
     }
     
     async init() {
-        // Check for date change first
+        // Check for date change first and force new day check
+        const currentDate = this.dailyWordManager.getTodaysDate();
+        const lastKnownDate = localStorage.getItem('wordle_last_date');
+        
+        console.log('Initializing game:', {
+            currentDate,
+            lastKnownDate,
+            dateChanged: this.dailyWordManager.hasDateChanged()
+        });
+        
+        // If date has changed, clear last known date to ensure fresh check
         if (this.dailyWordManager.hasDateChanged()) {
-            console.log('New day detected! Refreshing game...');
+            console.log('New day detected! Clearing old states...');
+            localStorage.removeItem('wordle_last_date');
         }
         
-        // Check if player has already played today
+        // Check if player has already played today (with updated date logic)
         if (this.dailyWordManager.hasPlayedToday()) {
             this.showAlreadyPlayed();
             return;
@@ -329,6 +340,7 @@ class WordleGame {
 
     showAlreadyPlayed() {
         const stats = this.dailyWordManager.getTodayStats();
+        const currentDate = this.dailyWordManager.getTodaysDate();
         const container = document.querySelector('.container');
         
         container.innerHTML = `
@@ -346,6 +358,13 @@ class WordleGame {
                         Attempts: ${stats.attempts}/6<br>
                         Completed: ${new Date(stats.completedAt).toLocaleTimeString()}
                     </div>
+                    <div style="margin: 10px 0; font-size: 12px; color: #818384;">
+                        Current Date: ${currentDate}<br>
+                        CST Time: ${this.dailyWordManager.getCSTDate().toLocaleString()}
+                    </div>
+                    <button onclick="forceRefresh()" style="background-color: #f5793a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0;">
+                        🔄 Force Check for New Day
+                    </button>
                     <div class="timer-display" id="nextWordTimer"></div>
                 </div>
             </main>
@@ -621,6 +640,28 @@ function shareResults() {
 
 function goToAdmin() {
     window.location.href = 'admin/admin-panel.html';
+}
+
+function forceRefresh() {
+    console.log('Force refresh triggered');
+    const manager = new DailyWordManager();
+    const currentDate = manager.getTodaysDate();
+    const allStates = JSON.parse(localStorage.getItem('wordle_game_state') || '{}');
+    
+    console.log('Current date:', currentDate);
+    console.log('All game states:', allStates);
+    console.log('Has date changed:', manager.hasDateChanged());
+    
+    // Clear the last known date to force a date check
+    localStorage.removeItem('wordle_last_date');
+    
+    // Check if it's actually a new day
+    if (manager.hasDateChanged() || manager.isNewDayAvailable()) {
+        console.log('New day confirmed - reloading page');
+        location.reload();
+    } else {
+        alert('Still the same day in CST timezone. Please wait until midnight CST (currently ' + manager.getCSTDate().toLocaleString() + ')');
+    }
 }
 
 // Initialize the game when the page loads
