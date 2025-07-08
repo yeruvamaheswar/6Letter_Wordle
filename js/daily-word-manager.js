@@ -206,6 +206,22 @@ class DailyWordManager {
         const today = this.getTodaysDate();
         const attempts = gameState.won ? gameState.attempts : 'X';
         
+        // Get emoji message based on performance
+        let emojiMessage = '';
+        if (gameState.won) {
+            const messages = {
+                1: '🧠 GENIUS! You just read its mind.',
+                2: '⚡ Sharp as a blade! Almost psychic.',
+                3: '🎯 Bullseye! You\'ve got the touch.',
+                4: '🕵️ Sleuth mode: Activated. Solid work!',
+                5: '😅 That was close… But you made it!',
+                6: '⏳ Just in time! You never gave up.'
+            };
+            emojiMessage = messages[gameState.attempts] || messages[6];
+        } else {
+            emojiMessage = '💔 The word won this time… Try again tomorrow!';
+        }
+        
         let shareText = `6-Letter Wordle ${today} ${attempts}/6\n\n`;
         
         if (gameState.guesses && gameState.guesses.length > 0) {
@@ -219,6 +235,8 @@ class DailyWordManager {
                 shareText += line + '\n';
             });
         }
+        
+        shareText += `\n${emojiMessage}`;
         
         return shareText;
     }

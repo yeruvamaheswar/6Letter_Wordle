@@ -349,6 +349,44 @@ class WordleGame {
         this.startTimer();
     }
 
+    getCompletionMessage(won, attempts) {
+        if (!won) {
+            return {
+                title: '💔 The word won this time… Try again tomorrow!',
+                message: `The word was: <strong>${this.targetWord}</strong><br>Come back tomorrow for a new chance!`
+            };
+        }
+
+        const messages = {
+            1: {
+                title: '🧠 GENIUS! You just read its mind.',
+                message: `Incredible! You solved it in just <strong>1 guess</strong>!`
+            },
+            2: {
+                title: '⚡ Sharp as a blade! Almost psychic.',
+                message: `Amazing! You solved it in <strong>2 guesses</strong>!`
+            },
+            3: {
+                title: '🎯 Bullseye! You\'ve got the touch.',
+                message: `Excellent! You solved it in <strong>3 guesses</strong>!`
+            },
+            4: {
+                title: '🕵️ Sleuth mode: Activated. Solid work!',
+                message: `Great job! You solved it in <strong>4 guesses</strong>!`
+            },
+            5: {
+                title: '😅 That was close… But you made it!',
+                message: `Phew! You solved it in <strong>5 guesses</strong>!`
+            },
+            6: {
+                title: '⏳ Just in time! You never gave up.',
+                message: `Close call! You solved it in <strong>6 guesses</strong>!`
+            }
+        };
+
+        return messages[attempts] || messages[6];
+    }
+
     showGameComplete(won, attempts) {
         // Save game state
         const gameState = {
@@ -368,21 +406,14 @@ class WordleGame {
         const completionMessage = document.getElementById('completionMessage');
         const gameCompleteDiv = document.getElementById('gameComplete');
         
-        if (won) {
-            completionTitle.textContent = '🎉 Congratulations!';
-            completionMessage.innerHTML = `
-                You solved today's puzzle in <strong>${attempts}</strong> attempt${attempts === 1 ? '' : 's'}!<br>
-                The word was: <strong>${this.targetWord}</strong><br>
-                Come back tomorrow for a new challenge!
-            `;
-        } else {
-            completionTitle.textContent = '😔 Better luck tomorrow!';
-            completionMessage.innerHTML = `
-                You didn't solve today's puzzle.<br>
-                The word was: <strong>${this.targetWord}</strong><br>
-                Come back tomorrow for a new chance!
-            `;
-        }
+        const completion = this.getCompletionMessage(won, attempts);
+        
+        completionTitle.textContent = completion.title;
+        completionMessage.innerHTML = `
+            ${completion.message}<br>
+            The word was: <strong>${this.targetWord}</strong><br><br>
+            Come back tomorrow for a new challenge!
+        `;
         
         gameCompleteDiv.style.display = 'block';
     }
