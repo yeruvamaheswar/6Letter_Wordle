@@ -401,6 +401,13 @@ class WordleGame {
         
         this.dailyWordManager.saveGameState(gameState);
         
+        // Trigger confetti for first attempt genius wins!
+        if (won && attempts === 1) {
+            setTimeout(() => {
+                this.triggerConfetti();
+            }, 1000); // Delay confetti slightly for better effect
+        }
+        
         // Show completion UI
         const completionTitle = document.getElementById('completionTitle');
         const completionMessage = document.getElementById('completionMessage');
@@ -461,6 +468,65 @@ class WordleGame {
         
         updateTimer();
         setInterval(updateTimer, 60000); // Update every minute
+    }
+
+    createConfetti() {
+        // Create confetti container
+        const confettiContainer = document.createElement('div');
+        confettiContainer.className = 'confetti-container';
+        document.body.appendChild(confettiContainer);
+
+        // Create multiple confetti pieces
+        const confettiCount = 50;
+        const shapes = ['circle', 'square', 'triangle', 'star'];
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe', '#fd79a8', '#00b894'];
+
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            
+            // Random shape
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            confetti.classList.add(`confetti-${shape}`);
+            
+            // Random color
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.backgroundColor = color;
+            
+            // Random starting position
+            confetti.style.left = Math.random() * 100 + '%';
+            
+            // Random size
+            const size = Math.random() * 6 + 4; // 4-10px
+            confetti.style.width = size + 'px';
+            confetti.style.height = size + 'px';
+            
+            // Random animation duration
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2-4s
+            
+            // Random rotation
+            confetti.style.animationDelay = Math.random() * 1 + 's';
+            
+            confettiContainer.appendChild(confetti);
+        }
+
+        // Remove confetti after animation
+        setTimeout(() => {
+            document.body.removeChild(confettiContainer);
+        }, 5000);
+    }
+
+    triggerConfetti() {
+        // Create confetti effect
+        this.createConfetti();
+        
+        // Add some extra visual effects
+        const gameBoard = document.querySelector('.game-board');
+        gameBoard.style.animation = 'celebrate 0.6s ease-in-out';
+        
+        setTimeout(() => {
+            gameBoard.style.animation = '';
+        }, 600);
     }
 }
 
