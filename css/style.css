@@ -266,7 +266,7 @@ h1 {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(18, 18, 19, 0.95);
+    background-color: rgba(18, 18, 19, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -275,14 +275,15 @@ h1 {
 }
 
 .overlay-content {
-    background-color: #2a2a2c;
+    background-color: rgba(42, 42, 44, 0.9);
     border-radius: 15px;
     padding: 30px;
     text-align: center;
     border: 2px solid #538d4e;
-    box-shadow: 0 0 20px rgba(83, 141, 78, 0.3);
+    box-shadow: 0 0 20px rgba(83, 141, 78, 0.5);
     max-width: 90%;
     animation: overlaySlideIn 0.5s ease-out;
+    backdrop-filter: blur(5px);
 }
 
 .overlay-content h3 {
