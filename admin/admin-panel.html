@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6-Letter Wordle - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121213;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #3a3a3c;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #818384;
+            font-size: 1rem;
+        }
+
+        .login-form {
+            background-color: #2a2a2c;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        input[type="password"], input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #3a3a3c;
+            border-radius: 5px;
+            background-color: #121213;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input[type="password"]:focus, input[type="text"]:focus, input[type="date"]:focus {
+            border-color: #538d4e;
+            outline: none;
+        }
+
+        button {
+            background-color: #538d4e;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #4a7c47;
+        }
+
+        button.secondary {
+            background-color: #818384;
+        }
+
+        button.secondary:hover {
+            background-color: #6c757d;
+        }
+
+        button.danger {
+            background-color: #dc3545;
+        }
+
+        button.danger:hover {
+            background-color: #c82333;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .panel-section {
+            background-color: #2a2a2c;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            border-bottom: 1px solid #3a3a3c;
+            padding-bottom: 10px;
+        }
+
+        .current-word {
+            background-color: #538d4e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-word .word {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        .current-word .date {
+            font-size: 1rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .word-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #3a3a3c;
+            border-radius: 5px;
+        }
+
+        .word-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #3a3a3c;
+            background-color: #1a1a1b;
+        }
+
+        .word-entry:last-child {
+            border-bottom: none;
+        }
+
+        .word-entry:hover {
+            background-color: #2a2a2c;
+        }
+
+        .word-entry .date {
+            color: #818384;
+            font-size: 0.9rem;
+        }
+
+        .word-entry .word {
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .word-entry .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .word-entry .actions button {
+            padding: 5px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: #1a1a1b;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #3a3a3c;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #538d4e;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #818384;
+            margin-top: 5px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-row button {
+            width: auto;
+            padding: 12px 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-row button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>6-Letter Wordle</h1>
+            <p class="subtitle">Admin Panel - Word Management</p>
+        </header>
+
+        <!-- Login Form -->
+        <div id="loginSection" class="login-form">
+            <h2 style="text-align: center; margin-bottom: 20px;">Admin Login</h2>
+            <div id="loginMessage"></div>
+            <div class="form-group">
+                <label for="adminPassword">Password:</label>
+                <input type="password" id="adminPassword" placeholder="Enter admin password">
+            </div>
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-panel">
+            <div class="panel-section">
+                <div class="section-title">Today's Word</div>
+                <div id="currentWordDisplay" class="current-word">
+                    <div class="word" id="currentWord">LOADING</div>
+                    <div class="date" id="currentDate">Loading...</div>
+                </div>
+                <button onclick="generateNewWord()" class="secondary">Generate New Random Word</button>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Set Daily Word</div>
+                <div id="setWordMessage"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wordDate">Date:</label>
+                        <input type="date" id="wordDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="newWord">Word (6 letters):</label>
+                        <input type="text" id="newWord" placeholder="ENTER 6-LETTER WORD" maxlength="6" style="text-transform: uppercase;">
+                    </div>
+                    <button onclick="setDailyWord()">Set Word</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Game Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalWords">0</div>
+                        <div class="stat-label">Total Words Set</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayPlayers">0</div>
+                        <div class="stat-label">Today's Players</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="nextWordTime">--:--</div>
+                        <div class="stat-label">Next Word In</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Upcoming Words</div>
+                <div id="wordList" class="word-list">
+                    Loading words...
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">Security Settings</div>
+                <div id="passwordWarning" class="message" style="display: none;"></div>
+                <div id="passwordChangeMessage"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password (min 6 chars)">
+                    </div>
+                    <button onclick="changePassword()">Change Password</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <button onclick="logout()" class="danger">Logout</button>
+                <button onclick="goToGame()" class="secondary" style="margin-left: 10px;">Go to Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/daily-word-manager.js"></script>
+    <script>
+        const wordManager = new DailyWordManager();
+        let updateInterval;
+
+        function showMessage(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 3000);
+        }
+
+        function login() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (wordManager.adminLogin(password)) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminData();
+                startUpdateTimer();
+            } else {
+                showMessage('loginMessage', 'Invalid password. Please try again.', 'error');
+            }
+        }
+
+        function logout() {
+            wordManager.adminLogout();
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+
+        function loadAdminData() {
+            // Load current word
+            const todayWord = wordManager.getDailyWord();
+            document.getElementById('currentWord').textContent = todayWord.word;
+            document.getElementById('currentDate').textContent = todayWord.date;
+
+            // Set today's date as default
+            document.getElementById('wordDate').value = wordManager.getTodaysDate();
+
+            // Check if using default password
+            checkPasswordSecurity();
+
+            // Load statistics
+            updateStats();
+
+            // Load word list
+            loadWordList();
+        }
+
+        function checkPasswordSecurity() {
+            if (wordManager.isUsingDefaultPassword()) {
+                const warningEl = document.getElementById('passwordWarning');
+                warningEl.innerHTML = '<div class="message error">⚠️ You are using the default password! Please change it for security.</div>';
+                warningEl.style.display = 'block';
+            }
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            if (!currentPassword || !newPassword) {
+                showMessage('passwordChangeMessage', 'Please fill in both password fields.', 'error');
+                return;
+            }
+
+            const result = wordManager.changeAdminPassword(currentPassword, newPassword);
+            
+            if (result.success) {
+                showMessage('passwordChangeMessage', result.message);
+                
+                // Clear the fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                
+                // Hide the warning if it was showing
+                document.getElementById('passwordWarning').style.display = 'none';
+            } else {
+                showMessage('passwordChangeMessage', result.message, 'error');
+            }
+        }
+
+        function updateStats() {
+            const allWords = wordManager.getAllDailyWords();
+            document.getElementById('totalWords').textContent = Object.keys(allWords).length;
+
+            // Update next word countdown
+            const timeUntilNext = wordManager.getDaysUntilNext();
+            document.getElementById('nextWordTime').textContent = 
+                `${timeUntilNext.hours}h ${timeUntilNext.minutes}m`;
+        }
+
+        function loadWordList() {
+            const allWords = wordManager.getAllDailyWords();
+            const wordList = document.getElementById('wordList');
+            
+            // Get next 10 days of words
+            const entries = [];
+            const today = new Date();
+            
+            for (let i = 0; i < 10; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                const dateStr = wordManager.formatDate(date);
+                const wordData = wordManager.getDailyWord(dateStr);
+                entries.push({ date: dateStr, word: wordData.word, source: wordData.source });
+            }
+
+            wordList.innerHTML = entries.map(entry => `
+                <div class="word-entry">
+                    <div>
+                        <div class="word">${entry.word}</div>
+                        <div class="date">${entry.date} ${entry.source === 'generated' ? '(auto)' : ''}</div>
+                    </div>
+                    <div class="actions">
+                        <button onclick="editWord('${entry.date}', '${entry.word}')" class="secondary">Edit</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setDailyWord() {
+            const date = document.getElementById('wordDate').value;
+            const word = document.getElementById('newWord').value.toUpperCase();
+
+            if (!date) {
+                showMessage('setWordMessage', 'Please select a date.', 'error');
+                return;
+            }
+
+            if (word.length !== 6 || !/^[A-Z]+$/.test(word)) {
+                showMessage('setWordMessage', 'Word must be exactly 6 letters (A-Z only).', 'error');
+                return;
+            }
+
+            wordManager.setDailyWord(date, word);
+            showMessage('setWordMessage', `Word "${word}" set for ${date}!`);
+            
+            // Clear form
+            document.getElementById('newWord').value = '';
+            
+            // Refresh data
+            loadAdminData();
+        }
+
+        function editWord(date, currentWord) {
+            document.getElementById('wordDate').value = date;
+            document.getElementById('newWord').value = currentWord;
+            document.getElementById('newWord').focus();
+        }
+
+        function generateNewWord() {
+            const words = [
+                'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
+                'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW',
+                'GOLDEN', 'SILVER', 'BRONZE', 'MARBLE', 'FABRIC', 'CAMERA',
+                'GUITAR', 'VIOLIN', 'PENCIL', 'CRAYON', 'CANDLE', 'BOTTLE'
+            ];
+            
+            const randomWord = words[Math.floor(Math.random() * words.length)];
+            const today = wordManager.getTodaysDate();
+            
+            wordManager.setDailyWord(today, randomWord);
+            loadAdminData();
+            showMessage('setWordMessage', `New random word "${randomWord}" set for today!`);
+        }
+
+        function goToGame() {
+            window.location.href = '../index.html';
+        }
+
+        function startUpdateTimer() {
+            updateInterval = setInterval(updateStats, 60000); // Update every minute
+        }
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            if (wordManager.isAdminLoggedIn()) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminData();
+                startUpdateTimer();
+            }
+        });
+
+        // Enter key support for login
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        // Auto-uppercase word input
+        document.getElementById('newWord').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

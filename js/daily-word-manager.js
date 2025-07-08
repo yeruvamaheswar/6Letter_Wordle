@@ -1,0 +1,229 @@
+class DailyWordManager {
+    constructor() {
+        this.storageKey = 'wordle_daily_words';
+        this.gameStateKey = 'wordle_game_state';
+        this.adminKey = 'wordle_admin_session';
+        this.passwordKey = 'wordle_admin_password';
+        this.defaultPassword = 'admin123'; // Default password
+        
+        this.initializeStorage();
+    }
+
+    initializeStorage() {
+        if (!localStorage.getItem(this.storageKey)) {
+            const initialWords = this.generateInitialWords();
+            localStorage.setItem(this.storageKey, JSON.stringify(initialWords));
+        }
+    }
+
+    generateInitialWords() {
+        const baseDate = new Date('2024-01-01');
+        const words = [
+            'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
+            'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW',
+            'GOLDEN', 'SILVER', 'BRONZE', 'MARBLE', 'FABRIC', 'CAMERA',
+            'GUITAR', 'VIOLIN', 'PENCIL', 'CRAYON', 'CANDLE', 'BOTTLE',
+            'GARDEN', 'SQUARE', 'CIRCLE', 'STRIPE', 'SHADOW', 'BRIGHT',
+            'SMOOTH', 'STRONG', 'GENTLE', 'MIGHTY', 'HUMBLE', 'SIMPLE',
+            'FROZEN', 'WARMTH', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER',
+            'ORANGE', 'PURPLE', 'YELLOW', 'VIOLET', 'SALMON', 'TURKEY',
+            'NATURE', 'BEAUTY', 'FRIEND', 'FAMILY', 'HEALTH', 'FUTURE',
+            'DREAMS', 'VISION', 'CHANGE', 'GROWTH', 'SKILLS', 'TALENT'
+        ];
+
+        const dailyWords = {};
+        for (let i = 0; i < 365; i++) {
+            const date = new Date(baseDate);
+            date.setDate(date.getDate() + i);
+            const dateStr = this.formatDate(date);
+            dailyWords[dateStr] = words[i % words.length];
+        }
+
+        return dailyWords;
+    }
+
+    formatDate(date) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+
+    getTodaysDate() {
+        return this.formatDate(new Date());
+    }
+
+    getDailyWord(date = null) {
+        const targetDate = date || this.getTodaysDate();
+        const dailyWords = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        
+        if (dailyWords[targetDate]) {
+            return {
+                word: dailyWords[targetDate],
+                date: targetDate,
+                source: 'daily'
+            };
+        }
+
+        // Generate a deterministic word for any date not in storage
+        const dateHash = this.hashDate(targetDate);
+        const fallbackWords = [
+            'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
+            'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW'
+        ];
+        
+        return {
+            word: fallbackWords[dateHash % fallbackWords.length],
+            date: targetDate,
+            source: 'generated'
+        };
+    }
+
+    hashDate(dateStr) {
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+            const char = dateStr.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash);
+    }
+
+    setDailyWord(date, word) {
+        const dailyWords = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        dailyWords[date] = word.toUpperCase();
+        localStorage.setItem(this.storageKey, JSON.stringify(dailyWords));
+        return true;
+    }
+
+    getAllDailyWords() {
+        return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+    }
+
+    // Game state management
+    saveGameState(gameState) {
+        const today = this.getTodaysDate();
+        const allStates = JSON.parse(localStorage.getItem(this.gameStateKey) || '{}');
+        
+        allStates[today] = {
+            ...gameState,
+            date: today,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(this.gameStateKey, JSON.stringify(allStates));
+    }
+
+    loadGameState(date = null) {
+        const targetDate = date || this.getTodaysDate();
+        const allStates = JSON.parse(localStorage.getItem(this.gameStateKey) || '{}');
+        return allStates[targetDate] || null;
+    }
+
+    hasPlayedToday() {
+        const todayState = this.loadGameState();
+        return todayState !== null;
+    }
+
+    getTodayStats() {
+        const todayState = this.loadGameState();
+        if (!todayState) {
+            return { played: false };
+        }
+
+        return {
+            played: true,
+            won: todayState.won || false,
+            guesses: todayState.guesses || [],
+            attempts: todayState.attempts || 0,
+            completedAt: todayState.timestamp
+        };
+    }
+
+    // Admin authentication
+    isAdminLoggedIn() {
+        const session = localStorage.getItem(this.adminKey);
+        if (!session) return false;
+        
+        const sessionData = JSON.parse(session);
+        const now = new Date().getTime();
+        const sessionTime = new Date(sessionData.timestamp).getTime();
+        const hourInMs = 60 * 60 * 1000;
+        
+        return (now - sessionTime) < hourInMs; // Session valid for 1 hour
+    }
+
+    getStoredPassword() {
+        return localStorage.getItem(this.passwordKey) || this.defaultPassword;
+    }
+
+    adminLogin(password) {
+        const currentPassword = this.getStoredPassword();
+        if (password === currentPassword) {
+            const sessionData = {
+                timestamp: new Date().toISOString(),
+                authenticated: true
+            };
+            localStorage.setItem(this.adminKey, JSON.stringify(sessionData));
+            return true;
+        }
+        return false;
+    }
+
+    changeAdminPassword(currentPassword, newPassword) {
+        if (currentPassword === this.getStoredPassword()) {
+            if (newPassword && newPassword.length >= 6) {
+                localStorage.setItem(this.passwordKey, newPassword);
+                return { success: true, message: 'Password changed successfully!' };
+            } else {
+                return { success: false, message: 'New password must be at least 6 characters long.' };
+            }
+        } else {
+            return { success: false, message: 'Current password is incorrect.' };
+        }
+    }
+
+    isUsingDefaultPassword() {
+        return this.getStoredPassword() === this.defaultPassword;
+    }
+
+    adminLogout() {
+        localStorage.removeItem(this.adminKey);
+    }
+
+    // Utility methods
+    getDaysUntilNext() {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const msUntilTomorrow = tomorrow.getTime() - now.getTime();
+        const hoursUntilTomorrow = Math.floor(msUntilTomorrow / (1000 * 60 * 60));
+        const minutesUntilTomorrow = Math.floor((msUntilTomorrow % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return { hours: hoursUntilTomorrow, minutes: minutesUntilTomorrow };
+    }
+
+    getShareText(gameState) {
+        const today = this.getTodaysDate();
+        const attempts = gameState.won ? gameState.attempts : 'X';
+        
+        let shareText = `6-Letter Wordle ${today} ${attempts}/6\n\n`;
+        
+        if (gameState.guesses && gameState.guesses.length > 0) {
+            gameState.guesses.forEach(guess => {
+                let line = '';
+                guess.result.forEach(cell => {
+                    if (cell === 'correct') line += '🟩';
+                    else if (cell === 'present') line += '🟨';
+                    else line += '⬛';
+                });
+                shareText += line + '\n';
+            });
+        }
+        
+        return shareText;
+    }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = DailyWordManager;
+}
