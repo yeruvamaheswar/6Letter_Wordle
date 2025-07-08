@@ -102,6 +102,14 @@
                 </div>
             </div>
             
+            <!-- Completion Overlay - appears over game board -->
+            <div id="completionOverlay" class="completion-overlay" style="display: none;">
+                <div class="overlay-content">
+                    <h3 id="overlayTitle">Game Complete!</h3>
+                    <div id="overlayMessage"></div>
+                </div>
+            </div>
+            
             <div class="message" id="message"></div>
             
             <div class="status-info" id="statusInfo">
@@ -114,7 +122,6 @@
             
             <div id="gameComplete" class="game-complete" style="display: none;">
                 <div class="completion-stats">
-                    <h3 id="completionTitle">Game Complete!</h3>
                     <div id="completionMessage"></div>
                     <button id="shareButton" onclick="shareResults()">📱 Share Results</button>
                 </div>

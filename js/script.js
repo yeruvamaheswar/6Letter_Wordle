@@ -468,21 +468,44 @@ class WordleGame {
             }, 1000); // Delay confetti slightly for better effect
         }
         
-        // Show completion UI
-        const completionTitle = document.getElementById('completionTitle');
-        const completionMessage = document.getElementById('completionMessage');
-        const gameCompleteDiv = document.getElementById('gameComplete');
-        
+        // Show overlay with appreciation message first
         const completion = this.getCompletionMessage(won, attempts);
+        this.showCompletionOverlay(completion);
         
-        completionTitle.textContent = completion.title;
-        completionMessage.innerHTML = `
-            ${completion.message}<br>
-            The word was: <strong>${this.targetWord}</strong><br><br>
-            Come back tomorrow for a new challenge!
-        `;
+        // Show full completion UI below after a delay
+        setTimeout(() => {
+            const completionMessage = document.getElementById('completionMessage');
+            const gameCompleteDiv = document.getElementById('gameComplete');
+            
+            completionMessage.innerHTML = `
+                The word was: <strong>${this.targetWord}</strong><br><br>
+                Come back tomorrow for a new challenge!
+            `;
+            
+            gameCompleteDiv.style.display = 'block';
+        }, 3000); // Show detailed info after 3 seconds
+    }
+
+    showCompletionOverlay(completion) {
+        const overlay = document.getElementById('completionOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayMessage = document.getElementById('overlayMessage');
         
-        gameCompleteDiv.style.display = 'block';
+        overlayTitle.textContent = completion.title;
+        overlayMessage.innerHTML = completion.message;
+        
+        // Show overlay
+        overlay.style.display = 'flex';
+        
+        // Auto-hide overlay after 3 seconds
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 3000);
+        
+        // Allow clicking overlay to dismiss early
+        overlay.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
     }
 
     getGuessResult(guess) {
