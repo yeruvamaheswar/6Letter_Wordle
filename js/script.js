@@ -23,6 +23,11 @@ class WordleGame {
     }
     
     async init() {
+        // Check for date change first
+        if (this.dailyWordManager.hasDateChanged()) {
+            console.log('New day detected! Refreshing game...');
+        }
+        
         // Check if player has already played today
         if (this.dailyWordManager.hasPlayedToday()) {
             this.showAlreadyPlayed();
@@ -41,6 +46,7 @@ class WordleGame {
         this.resetBoard();
         this.updateDailyInfo();
         this.startTimer();
+        this.setupMidnightCheck();
         this.message.textContent = '';
     }
     
@@ -346,6 +352,35 @@ class WordleGame {
         `;
         
         this.startTimer();
+        this.setupMidnightCheckForAlreadyPlayed();
+    }
+
+    setupMidnightCheckForAlreadyPlayed() {
+        // Check for new day every 30 seconds when already played
+        setInterval(() => {
+            if (this.dailyWordManager.hasDateChanged()) {
+                console.log('New day detected - reloading to allow new game!');
+                location.reload();
+            }
+        }, 30000);
+
+        // More frequent check near midnight
+        setInterval(() => {
+            const secondsUntilMidnight = this.dailyWordManager.getSecondsUntilMidnight();
+            if (secondsUntilMidnight <= 60 && secondsUntilMidnight > 0) {
+                const midnightInterval = setInterval(() => {
+                    if (this.dailyWordManager.hasDateChanged()) {
+                        console.log('Midnight passed - reloading for new puzzle!');
+                        location.reload();
+                    }
+                    
+                    const newSecondsUntil = this.dailyWordManager.getSecondsUntilMidnight();
+                    if (newSecondsUntil > 60) {
+                        clearInterval(midnightInterval);
+                    }
+                }, 5000);
+            }
+        }, 60000);
     }
 
     getCompletionMessage(won, attempts) {
@@ -467,6 +502,38 @@ class WordleGame {
         
         updateTimer();
         setInterval(updateTimer, 60000); // Update every minute
+    }
+
+    setupMidnightCheck() {
+        // Check for new day every 30 seconds
+        setInterval(() => {
+            if (this.dailyWordManager.hasDateChanged()) {
+                console.log('Date changed - new day available!');
+                // If user has played and it's a new day, refresh to new puzzle
+                if (this.gameComplete || this.gameOver) {
+                    location.reload();
+                }
+            }
+        }, 30000);
+
+        // More frequent check near midnight (check every 5 seconds if within 1 minute of midnight)
+        setInterval(() => {
+            const secondsUntilMidnight = this.dailyWordManager.getSecondsUntilMidnight();
+            if (secondsUntilMidnight <= 60 && secondsUntilMidnight > 0) {
+                // Check every 5 seconds when close to midnight
+                const midnightInterval = setInterval(() => {
+                    if (this.dailyWordManager.hasDateChanged()) {
+                        console.log('Midnight passed - reloading for new puzzle!');
+                        location.reload();
+                    }
+                    
+                    const newSecondsUntil = this.dailyWordManager.getSecondsUntilMidnight();
+                    if (newSecondsUntil > 60) {
+                        clearInterval(midnightInterval);
+                    }
+                }, 5000);
+            }
+        }, 60000); // Check if we're near midnight every minute
     }
 
     createConfetti() {

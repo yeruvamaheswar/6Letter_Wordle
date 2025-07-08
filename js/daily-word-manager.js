@@ -245,6 +245,27 @@ class DailyWordManager {
         return fallbackWords[dateHash % fallbackWords.length];
     }
 
+    // Date change detection
+    hasDateChanged() {
+        const currentDate = this.getTodaysDate();
+        const lastKnownDate = localStorage.getItem('wordle_last_date');
+        
+        if (!lastKnownDate || lastKnownDate !== currentDate) {
+            localStorage.setItem('wordle_last_date', currentDate);
+            return !lastKnownDate || lastKnownDate !== currentDate;
+        }
+        
+        return false;
+    }
+
+    isNewDayAvailable() {
+        const currentDate = this.getTodaysDate();
+        const gameState = this.loadGameState(currentDate);
+        
+        // If no game state exists for today, new day is available
+        return gameState === null;
+    }
+
     // Utility methods
     getDaysUntilNext() {
         const now = this.getCSTDate();
@@ -257,6 +278,16 @@ class DailyWordManager {
         const minutesUntilTomorrow = Math.floor((msUntilTomorrow % (1000 * 60 * 60)) / (1000 * 60));
         
         return { hours: hoursUntilTomorrow, minutes: minutesUntilTomorrow };
+    }
+
+    getSecondsUntilMidnight() {
+        const now = this.getCSTDate();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const msUntilTomorrow = tomorrow.getTime() - now.getTime();
+        return Math.floor(msUntilTomorrow / 1000);
     }
 
     getShareText(gameState) {
