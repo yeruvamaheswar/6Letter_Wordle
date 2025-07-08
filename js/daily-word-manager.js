@@ -43,11 +43,29 @@ class DailyWordManager {
     }
 
     formatDate(date) {
-        return date.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Convert to CST timezone (UTC-6, or UTC-5 during daylight saving)
+        // Get current time in CST
+        const now = new Date();
+        const isDST = this.isDaylightSavingTime(now);
+        const cstOffset = isDST ? -5 : -6; // CDT is UTC-5, CST is UTC-6
+        
+        const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+        const cstDate = new Date(utc + (cstOffset * 3600000));
+        
+        // Format as YYYY-MM-DD
+        return cstDate.toISOString().split('T')[0];
     }
 
     getTodaysDate() {
         return this.formatDate(new Date());
+    }
+
+    getCSTDate() {
+        const now = new Date();
+        const isDST = this.isDaylightSavingTime(now);
+        const cstOffset = isDST ? -5 : -6; // CDT is UTC-5, CST is UTC-6
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        return new Date(utc + (cstOffset * 3600000));
     }
 
     getDailyWord(date = null) {
@@ -62,17 +80,14 @@ class DailyWordManager {
             };
         }
 
-        // Generate a deterministic word for any date not in storage
-        const dateHash = this.hashDate(targetDate);
-        const fallbackWords = [
-            'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
-            'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW'
-        ];
+        // Auto-generate and store a word for today if none exists
+        const generatedWord = this.generateWordForDate(targetDate);
+        this.setDailyWord(targetDate, generatedWord);
         
         return {
-            word: fallbackWords[dateHash % fallbackWords.length],
+            word: generatedWord,
             date: targetDate,
-            source: 'generated'
+            source: 'auto-generated'
         };
     }
 
@@ -196,9 +211,43 @@ class DailyWordManager {
         localStorage.removeItem(this.adminKey);
     }
 
+    isDaylightSavingTime(date) {
+        // DST in US: Second Sunday in March to First Sunday in November
+        const year = date.getFullYear();
+        
+        // Second Sunday in March
+        const march = new Date(year, 2, 1); // March 1st
+        const dstStart = new Date(year, 2, (14 - march.getDay()) % 7 + 8);
+        
+        // First Sunday in November  
+        const november = new Date(year, 10, 1); // November 1st
+        const dstEnd = new Date(year, 10, (7 - november.getDay()) % 7 + 1);
+        
+        return date >= dstStart && date < dstEnd;
+    }
+
+    generateWordForDate(dateStr) {
+        // Generate a deterministic word for any date
+        const dateHash = this.hashDate(dateStr);
+        const fallbackWords = [
+            'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
+            'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW',
+            'GOLDEN', 'SILVER', 'BRONZE', 'MARBLE', 'FABRIC', 'CAMERA',
+            'GUITAR', 'VIOLIN', 'PENCIL', 'CRAYON', 'CANDLE', 'BOTTLE',
+            'GARDEN', 'SQUARE', 'CIRCLE', 'STRIPE', 'SHADOW', 'BRIGHT',
+            'SMOOTH', 'STRONG', 'GENTLE', 'MIGHTY', 'HUMBLE', 'SIMPLE',
+            'FROZEN', 'WARMTH', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER',
+            'ORANGE', 'PURPLE', 'YELLOW', 'VIOLET', 'SALMON', 'TURKEY',
+            'NATURE', 'BEAUTY', 'FRIEND', 'FAMILY', 'HEALTH', 'FUTURE',
+            'DREAMS', 'VISION', 'CHANGE', 'GROWTH', 'SKILLS', 'TALENT'
+        ];
+        
+        return fallbackWords[dateHash % fallbackWords.length];
+    }
+
     // Utility methods
     getDaysUntilNext() {
-        const now = new Date();
+        const now = this.getCSTDate();
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
