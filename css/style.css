@@ -10,14 +10,39 @@ body {
     color: #ffffff;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
+    padding: 10px 0;
+    overflow-x: hidden;
+}
+
+/* Ensure content fits on mobile screens */
+@media (max-height: 800px) {
+    body {
+        align-items: flex-start;
+        padding: 5px 0;
+    }
+}
+
+/* Handle mobile keyboard */
+@media (max-height: 600px) {
+    body {
+        min-height: auto;
+        height: auto;
+    }
+    
+    .container {
+        min-height: auto;
+    }
 }
 
 .container {
     max-width: 500px;
     width: 100%;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 }
 
 header {
@@ -378,27 +403,154 @@ h1 {
     75% { transform: scale(1.05) rotate(1deg); }
 }
 
+/* Mobile optimizations */
 @media (max-width: 480px) {
+    .container {
+        padding: 10px;
+        max-width: 100%;
+    }
+    
+    header {
+        margin-bottom: 20px;
+    }
+    
+    h1 {
+        font-size: 1.6rem;
+    }
+    
+    .game-board {
+        gap: 3px;
+        margin-bottom: 20px;
+    }
+    
+    .row {
+        gap: 3px;
+    }
+    
     .cell {
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .keyboard {
+        gap: 6px;
+        margin-bottom: 15px;
+    }
+    
+    .keyboard-row {
+        gap: 4px;
     }
     
     .key {
-        min-width: 35px;
-        height: 50px;
-        font-size: 12px;
+        min-width: 30px;
+        height: 45px;
+        font-size: 11px;
+        padding: 0;
     }
     
     .key-enter, .key-backspace {
-        min-width: 55px;
-        font-size: 10px;
+        min-width: 50px;
+        font-size: 9px;
     }
     
     .row-error-message {
-        right: -150px;
-        font-size: 12px;
-        padding: 6px 10px;
+        right: -120px;
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+    
+    .status-info {
+        padding: 8px;
+        font-size: 11px;
+    }
+    
+    .daily-info {
+        font-size: 10px;
+    }
+}
+
+/* Extra small screens and landscape phones */
+@media (max-width: 360px) {
+    .cell {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .key {
+        min-width: 26px;
+        height: 40px;
+        font-size: 10px;
+    }
+    
+    .key-enter, .key-backspace {
+        min-width: 45px;
+        font-size: 8px;
+    }
+}
+
+/* Handle very short screens (mobile keyboard open) */
+@media (max-height: 500px) {
+    .container {
+        padding: 5px;
+    }
+    
+    header {
+        margin-bottom: 10px;
+    }
+    
+    h1 {
+        font-size: 1.4rem;
+        padding-bottom: 5px;
+    }
+    
+    .subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .game-board {
+        margin-bottom: 15px;
+        gap: 2px;
+    }
+    
+    .row {
+        gap: 2px;
+    }
+    
+    .cell {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .keyboard {
+        gap: 4px;
+        margin-bottom: 10px;
+    }
+    
+    .keyboard-row {
+        gap: 3px;
+    }
+    
+    .key {
+        min-width: 24px;
+        height: 35px;
+        font-size: 9px;
+    }
+    
+    .key-enter, .key-backspace {
+        min-width: 40px;
+        font-size: 7px;
+    }
+    
+    .status-info {
+        padding: 5px;
+        font-size: 10px;
+    }
+    
+    .message {
+        font-size: 1rem;
+        min-height: 20px;
     }
 }

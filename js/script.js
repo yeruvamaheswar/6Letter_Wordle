@@ -341,7 +341,6 @@ class WordleGame {
                         Completed: ${new Date(stats.completedAt).toLocaleTimeString()}
                     </div>
                     <div class="timer-display" id="nextWordTimer"></div>
-                    <button onclick="goToAdmin()" class="admin-link" style="margin-top: 15px;">⚙️ Admin Panel</button>
                 </div>
             </main>
         `;
