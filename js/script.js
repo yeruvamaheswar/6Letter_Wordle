@@ -368,6 +368,10 @@ class WordleGame {
                     <button onclick="emergencyReset()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px;">
                         🚨 Emergency Reset
                     </button>
+                    <br>
+                    <button onclick="syncWords()" style="background-color: #6c5ce7; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+                        🔄 Sync Admin Words
+                    </button>
                     <div class="timer-display" id="nextWordTimer"></div>
                 </div>
             </main>
@@ -668,31 +672,35 @@ function forceRefresh() {
 }
 
 function emergencyReset() {
-    if (confirm('⚠️ This will completely reset your game data and allow you to play today. Continue?')) {
+    if (confirm('⚠️ This will reset your game progress but keep daily words consistent. Continue?')) {
         console.log('Emergency reset triggered');
         
-        // Clear ALL game-related localStorage
+        // Clear ONLY game state and date tracking, but preserve daily words
         localStorage.removeItem('wordle_game_state');
         localStorage.removeItem('wordle_last_date');
-        localStorage.removeItem('wordle_daily_words');
         
-        // Also clear any other potential keys
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('wordle_')) {
-                keysToRemove.push(key);
-            }
-        }
+        // Preserve these important keys for consistency:
+        // - wordle_daily_words (keeps admin and game in sync)
+        // - wordle_admin_password (preserve admin settings)
+        // - wordle_admin_session (but this can be cleared)
+        localStorage.removeItem('wordle_admin_session');
         
-        keysToRemove.forEach(key => {
-            console.log('Removing localStorage key:', key);
-            localStorage.removeItem(key);
-        });
-        
-        alert('✅ Game data cleared! Reloading page...');
+        alert('✅ Game state reset! Daily words preserved for consistency.');
         location.reload();
     }
+}
+
+function syncWords() {
+    console.log('Syncing words between admin and game');
+    const manager = new DailyWordManager();
+    const currentDate = manager.getTodaysDate();
+    
+    // Force regenerate today's word to ensure consistency
+    const newWord = manager.generateWordForDate(currentDate);
+    manager.setDailyWord(currentDate, newWord);
+    
+    alert(`✅ Today's word synchronized: ${newWord}\nAdmin panel and game now use the same word.`);
+    location.reload();
 }
 
 // Initialize the game when the page loads
@@ -702,31 +710,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (urlParams.get('reset') === 'true') {
         console.log('Emergency reset via URL parameter');
         
-        // Clear ALL game-related localStorage
+        // Clear ONLY game state and date tracking, preserve daily words for consistency
         localStorage.removeItem('wordle_game_state');
         localStorage.removeItem('wordle_last_date');
-        localStorage.removeItem('wordle_daily_words');
         localStorage.removeItem('wordle_admin_session');
-        localStorage.removeItem('wordle_admin_password');
-        
-        // Clear any other wordle keys
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('wordle_')) {
-                keysToRemove.push(key);
-            }
-        }
-        
-        keysToRemove.forEach(key => {
-            localStorage.removeItem(key);
-        });
         
         // Remove the reset parameter and reload without it
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
         
-        alert('✅ Emergency reset complete! Starting fresh game...');
+        alert('✅ Emergency reset complete! Daily words preserved for consistency.');
     }
     
     window.wordleGame = new WordleGame();
