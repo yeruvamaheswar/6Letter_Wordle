@@ -362,8 +362,11 @@ class WordleGame {
                         Current Date: ${currentDate}<br>
                         CST Time: ${this.dailyWordManager.getCSTDate().toLocaleString()}
                     </div>
-                    <button onclick="forceRefresh()" style="background-color: #f5793a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0;">
+                    <button onclick="forceRefresh()" style="background-color: #f5793a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px;">
                         🔄 Force Check for New Day
+                    </button>
+                    <button onclick="emergencyReset()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px;">
+                        🚨 Emergency Reset
                     </button>
                     <div class="timer-display" id="nextWordTimer"></div>
                 </div>
@@ -664,7 +667,67 @@ function forceRefresh() {
     }
 }
 
+function emergencyReset() {
+    if (confirm('⚠️ This will completely reset your game data and allow you to play today. Continue?')) {
+        console.log('Emergency reset triggered');
+        
+        // Clear ALL game-related localStorage
+        localStorage.removeItem('wordle_game_state');
+        localStorage.removeItem('wordle_last_date');
+        localStorage.removeItem('wordle_daily_words');
+        
+        // Also clear any other potential keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('wordle_')) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => {
+            console.log('Removing localStorage key:', key);
+            localStorage.removeItem(key);
+        });
+        
+        alert('✅ Game data cleared! Reloading page...');
+        location.reload();
+    }
+}
+
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for emergency reset URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'true') {
+        console.log('Emergency reset via URL parameter');
+        
+        // Clear ALL game-related localStorage
+        localStorage.removeItem('wordle_game_state');
+        localStorage.removeItem('wordle_last_date');
+        localStorage.removeItem('wordle_daily_words');
+        localStorage.removeItem('wordle_admin_session');
+        localStorage.removeItem('wordle_admin_password');
+        
+        // Clear any other wordle keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('wordle_')) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+        });
+        
+        // Remove the reset parameter and reload without it
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        alert('✅ Emergency reset complete! Starting fresh game...');
+    }
+    
     window.wordleGame = new WordleGame();
 });
