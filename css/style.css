@@ -52,9 +52,12 @@ header {
     text-align: center;
     margin-bottom: 30px;
     position: relative;
-    z-index: 10;
-    display: block;
-    visibility: visible;
+    z-index: 9999 !important;
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    background-color: #121213;
+    padding: 20px 0;
 }
 
 h1 {
@@ -62,9 +65,17 @@ h1 {
     font-weight: bold;
     border-bottom: 1px solid #3a3a3c;
     padding-bottom: 10px;
-    display: block;
-    visibility: visible;
-    color: #ffffff;
+    display: block !important;
+    visibility: visible !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+}
+
+.subtitle {
+    color: #818384 !important;
+    margin-top: 5px !important;
+    display: block !important;
+    visibility: visible !important;
 }
 
 .game-board {
@@ -281,10 +292,10 @@ h1 {
     align-items: center;
 }
 
-/* Completion Overlay - appears over game board */
+/* Completion Overlay - appears over game board only */
 .completion-overlay {
     position: absolute;
-    top: 0;
+    top: 120px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -292,7 +303,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 500;
     animation: overlayFadeIn 0.5s ease-in-out;
 }
 
@@ -505,10 +516,28 @@ h1 {
     
     header {
         margin-bottom: 20px;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 10000 !important;
+        background-color: #121213 !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid #3a3a3c !important;
     }
     
     h1 {
         font-size: 1.6rem;
+        color: #ffffff !important;
+        margin: 0 !important;
+    }
+    
+    main {
+        margin-top: 100px !important;
+    }
+    
+    .completion-overlay {
+        top: 100px !important;
     }
     
     .game-board {
