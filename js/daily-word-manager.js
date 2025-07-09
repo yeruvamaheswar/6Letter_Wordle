@@ -126,6 +126,27 @@ class DailyWordManager {
         localStorage.setItem(this.gameStateKey, JSON.stringify(allStates));
     }
 
+    saveCurrentProgress(progressState) {
+        const today = this.getTodaysDate();
+        const progressKey = 'wordle_current_progress';
+        const allProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+        
+        allProgress[today] = {
+            ...progressState,
+            date: today,
+            lastSaved: new Date().toISOString()
+        };
+        
+        localStorage.setItem(progressKey, JSON.stringify(allProgress));
+    }
+
+    loadCurrentProgress(date = null) {
+        const targetDate = date || this.getTodaysDate();
+        const progressKey = 'wordle_current_progress';
+        const allProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+        return allProgress[targetDate] || null;
+    }
+
     loadGameState(date = null) {
         const targetDate = date || this.getTodaysDate();
         const allStates = JSON.parse(localStorage.getItem(this.gameStateKey) || '{}');

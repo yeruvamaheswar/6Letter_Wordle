@@ -54,7 +54,7 @@ class WordleGame {
         console.log('Target word:', this.targetWord); // For debugging
         
         this.addEventListeners();
-        this.resetBoard();
+        this.loadProgress();
         this.updateDailyInfo();
         this.startTimer();
         this.setupMidnightCheck();
@@ -176,29 +176,66 @@ class WordleGame {
 
     preventDoubleTapZoom() {
         let lastTouchEnd = 0;
+        let touchCount = 0;
         
-        // Prevent double-tap zoom on the entire document
+        // More aggressive double-tap prevention
         document.addEventListener('touchend', (e) => {
             const now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
+            touchCount++;
+            
+            if (touchCount > 1 && now - lastTouchEnd <= 500) {
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
+            
+            setTimeout(() => { touchCount = 0; }, 500);
             lastTouchEnd = now;
-        }, false);
-        
-        // Prevent pinch zoom
-        document.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
         }, { passive: false });
         
-        // Prevent zoom on input focus (though we don't have inputs, good to have)
+        // Prevent all multi-touch gestures
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) {
                 e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
         }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, { passive: false });
+        
+        // Prevent gesture events (iOS specific)
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }, { passive: false });
+        
+        document.addEventListener('gesturechange', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }, { passive: false });
+        
+        document.addEventListener('gestureend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }, { passive: false });
+        
+        // Disable zoom via keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+                e.preventDefault();
+                return false;
+            }
+        });
     }
     
     handleKeyPress(key) {
@@ -219,6 +256,7 @@ class WordleGame {
             this.board[cellIndex].textContent = letter;
             this.board[cellIndex].classList.add('filled');
             this.currentLetter++;
+            this.saveProgress();
         }
     }
     
@@ -228,6 +266,7 @@ class WordleGame {
             const cellIndex = this.currentGuess * this.wordLength + this.currentLetter;
             this.board[cellIndex].textContent = '';
             this.board[cellIndex].classList.remove('filled');
+            this.saveProgress();
         }
     }
     
@@ -270,6 +309,9 @@ class WordleGame {
         
         this.currentGuess++;
         this.currentLetter = 0;
+        
+        // Save progress after each guess
+        this.saveProgress();
     }
     
     checkGuess(guess) {
@@ -366,6 +408,79 @@ class WordleGame {
         }, 2000);
     }
     
+    loadProgress() {
+        const progress = this.dailyWordManager.loadCurrentProgress();
+        
+        if (progress && progress.targetWord === this.targetWord) {
+            // Restore game state
+            this.currentGuess = progress.currentGuess || 0;
+            this.currentLetter = progress.currentLetter || 0;
+            this.guesses = progress.guesses || [];
+            
+            // Restore board state
+            this.restoreBoard(progress.boardState || []);
+            this.restoreKeyboard(progress.keyboardState || {});
+            
+            console.log('Progress restored:', progress);
+        } else {
+            this.resetBoard();
+        }
+    }
+
+    saveProgress() {
+        if (this.gameOver) return;
+        
+        const boardState = [];
+        this.board.forEach(cell => {
+            boardState.push({
+                text: cell.textContent,
+                classes: cell.className
+            });
+        });
+        
+        const keyboardState = {};
+        this.keyboard.forEach(key => {
+            const keyValue = key.getAttribute('data-key');
+            keyboardState[keyValue] = {
+                classes: key.className
+            };
+        });
+        
+        const progress = {
+            currentGuess: this.currentGuess,
+            currentLetter: this.currentLetter,
+            guesses: this.guesses,
+            targetWord: this.targetWord,
+            boardState: boardState,
+            keyboardState: keyboardState
+        };
+        
+        this.dailyWordManager.saveCurrentProgress(progress);
+    }
+
+    restoreBoard(boardState) {
+        this.board.forEach((cell, index) => {
+            if (boardState[index]) {
+                cell.textContent = boardState[index].text || '';
+                cell.className = boardState[index].classes || 'cell';
+            } else {
+                cell.textContent = '';
+                cell.className = 'cell';
+            }
+        });
+    }
+
+    restoreKeyboard(keyboardState) {
+        this.keyboard.forEach(key => {
+            const keyValue = key.getAttribute('data-key');
+            if (keyboardState[keyValue]) {
+                key.className = keyboardState[keyValue].classes || 'key';
+            } else {
+                key.className = 'key';
+            }
+        });
+    }
+
     resetBoard() {
         this.board.forEach(cell => {
             cell.textContent = '';
