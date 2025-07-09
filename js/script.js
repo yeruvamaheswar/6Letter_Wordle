@@ -134,9 +134,24 @@ class WordleGame {
     }
     
     addEventListeners() {
+        // Prevent double-tap zoom on mobile
+        this.preventDoubleTapZoom();
+        
         // Keyboard clicks
         this.keyboard.forEach(key => {
-            key.addEventListener('click', () => {
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                const keyValue = key.getAttribute('data-key');
+                this.handleKeyPress(keyValue);
+            });
+            
+            // Prevent touch events that might cause zoom
+            key.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            });
+            
+            key.addEventListener('touchend', (e) => {
+                e.preventDefault();
                 const keyValue = key.getAttribute('data-key');
                 this.handleKeyPress(keyValue);
             });
@@ -157,6 +172,33 @@ class WordleGame {
             e.preventDefault();
             e.stopPropagation();
         });
+    }
+
+    preventDoubleTapZoom() {
+        let lastTouchEnd = 0;
+        
+        // Prevent double-tap zoom on the entire document
+        document.addEventListener('touchend', (e) => {
+            const now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Prevent pinch zoom
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Prevent zoom on input focus (though we don't have inputs, good to have)
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     }
     
     handleKeyPress(key) {
