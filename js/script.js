@@ -51,7 +51,6 @@ class WordleGame {
         this.showMessage('Loading dictionary...', 'info');
         await this.loadWords();
         await this.selectTargetWord();
-        console.log('Target word:', this.targetWord); // For debugging
         
         this.addEventListeners();
         this.loadProgress();
@@ -72,14 +71,11 @@ class WordleGame {
                 .map(word => word.trim().toUpperCase())
                 .filter(word => /^[A-Z]+$/.test(word));
             
-            console.log(`Loaded ${this.words.length} 6-letter words from dictionary`);
-            console.log('RABBIT in dictionary:', this.words.includes('RABBIT'));
             
             if (this.words.length === 0) {
                 throw new Error('No valid words found');
             }
         } catch (error) {
-            console.error('Failed to load dictionary:', error);
             this.words = [
                 'PYTHON', 'JUNGLE', 'CASTLE', 'FLOWER', 'PLANET', 'WISDOM',
                 'ROCKET', 'SPIRIT', 'WINDOW', 'BRIDGE', 'FOREST', 'MEADOW',
@@ -96,26 +92,19 @@ class WordleGame {
 
     async testAPIConnection() {
         try {
-            console.log('Testing API connection...');
             this.wordSourceElement.textContent = 'Word source: Testing API...';
-            
-            // Test with a common word to check API availability
             const testResult = await this.dictionary.isValidWord('hello');
-            console.log('API test result:', testResult);
             
             if (testResult) {
                 this.apiAvailable = true;
-                console.log('API is available');
                 this.wordSourceElement.textContent = 'Word source: API Connected';
                 this.wordSourceElement.className = 'source-api';
             } else {
                 this.apiAvailable = false;
-                console.log('API test failed - word not found');
                 this.wordSourceElement.textContent = 'Word source: API Unavailable';
                 this.wordSourceElement.className = 'source-fallback';
             }
         } catch (error) {
-            console.error('API connection test failed:', error);
             this.apiAvailable = false;
             this.wordSourceElement.textContent = 'Word source: API Unavailable';
             this.wordSourceElement.className = 'source-fallback';
@@ -130,29 +119,23 @@ class WordleGame {
         this.wordSourceElement.textContent = 'Word source: Daily Word';
         this.wordSourceElement.className = 'source-api';
         
-        console.log('Using daily word:', this.targetWord, 'for date:', dailyWordData.date);
     }
     
     addEventListeners() {
         // Prevent double-tap zoom on mobile
         this.preventDoubleTapZoom();
         
-        // Keyboard clicks
+        // Optimized keyboard event handling
         this.keyboard.forEach(key => {
+            const keyValue = key.getAttribute('data-key');
+            
             key.addEventListener('click', (e) => {
                 e.preventDefault();
-                const keyValue = key.getAttribute('data-key');
                 this.handleKeyPress(keyValue);
-            });
-            
-            // Prevent touch events that might cause zoom
-            key.addEventListener('touchstart', (e) => {
-                e.preventDefault();
             });
             
             key.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                const keyValue = key.getAttribute('data-key');
                 this.handleKeyPress(keyValue);
             });
         });
@@ -176,65 +159,18 @@ class WordleGame {
 
     preventDoubleTapZoom() {
         let lastTouchEnd = 0;
-        let touchCount = 0;
         
-        // More aggressive double-tap prevention
-        document.addEventListener('touchend', (e) => {
-            const now = new Date().getTime();
-            touchCount++;
-            
-            if (touchCount > 1 && now - lastTouchEnd <= 500) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-            
-            setTimeout(() => { touchCount = 0; }, 500);
-            lastTouchEnd = now;
-        }, { passive: false });
-        
-        // Prevent all multi-touch gestures
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, { passive: false });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, { passive: false });
-        
-        // Prevent gesture events (iOS specific)
-        document.addEventListener('gesturestart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, { passive: false });
-        
-        document.addEventListener('gesturechange', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, { passive: false });
-        
-        document.addEventListener('gestureend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }, { passive: false });
-        
-        // Disable zoom via keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+        // Simplified zoom prevention
+        const preventZoom = (e) => {
+            if (e.touches?.length > 1 || Date.now() - lastTouchEnd < 300) {
                 e.preventDefault();
                 return false;
             }
+            lastTouchEnd = Date.now();
+        };
+        
+        ['touchstart', 'touchend', 'touchmove', 'gesturestart', 'gesturechange', 'gestureend'].forEach(event => {
+            document.addEventListener(event, preventZoom, { passive: false });
         });
     }
     
@@ -421,7 +357,6 @@ class WordleGame {
             this.restoreBoard(progress.boardState || []);
             this.restoreKeyboard(progress.keyboardState || {});
             
-            console.log('Progress restored:', progress);
         } else {
             this.resetBoard();
         }
@@ -535,36 +470,9 @@ class WordleGame {
         `;
         
         this.startTimer();
-        this.setupMidnightCheckForAlreadyPlayed();
+        this.setupMidnightCheck();
     }
 
-    setupMidnightCheckForAlreadyPlayed() {
-        // Check for new day every 30 seconds when already played
-        setInterval(() => {
-            if (this.dailyWordManager.hasDateChanged()) {
-                console.log('New day detected - reloading to allow new game!');
-                location.reload();
-            }
-        }, 30000);
-
-        // More frequent check near midnight
-        setInterval(() => {
-            const secondsUntilMidnight = this.dailyWordManager.getSecondsUntilMidnight();
-            if (secondsUntilMidnight <= 60 && secondsUntilMidnight > 0) {
-                const midnightInterval = setInterval(() => {
-                    if (this.dailyWordManager.hasDateChanged()) {
-                        console.log('Midnight passed - reloading for new puzzle!');
-                        location.reload();
-                    }
-                    
-                    const newSecondsUntil = this.dailyWordManager.getSecondsUntilMidnight();
-                    if (newSecondsUntil > 60) {
-                        clearInterval(midnightInterval);
-                    }
-                }, 5000);
-            }
-        }, 60000);
-    }
 
     getCompletionMessage(won, attempts) {
         if (!won) {
@@ -711,81 +619,52 @@ class WordleGame {
     }
 
     setupMidnightCheck() {
-        // Check for new day every 30 seconds
-        setInterval(() => {
+        // Unified date change monitoring
+        const checkDateChange = () => {
             if (this.dailyWordManager.hasDateChanged()) {
-                console.log('Date changed - new day available!');
-                // If user has played and it's a new day, refresh to new puzzle
-                if (this.gameComplete || this.gameOver) {
-                    location.reload();
-                }
+                location.reload();
             }
-        }, 30000);
+        };
 
-        // More frequent check near midnight (check every 5 seconds if within 1 minute of midnight)
+        // Regular check every 30 seconds
+        setInterval(checkDateChange, 30000);
+
+        // Intensive check near midnight
         setInterval(() => {
             const secondsUntilMidnight = this.dailyWordManager.getSecondsUntilMidnight();
             if (secondsUntilMidnight <= 60 && secondsUntilMidnight > 0) {
-                // Check every 5 seconds when close to midnight
-                const midnightInterval = setInterval(() => {
-                    if (this.dailyWordManager.hasDateChanged()) {
-                        console.log('Midnight passed - reloading for new puzzle!');
-                        location.reload();
-                    }
-                    
-                    const newSecondsUntil = this.dailyWordManager.getSecondsUntilMidnight();
-                    if (newSecondsUntil > 60) {
-                        clearInterval(midnightInterval);
+                const intensiveCheck = setInterval(() => {
+                    checkDateChange();
+                    if (this.dailyWordManager.getSecondsUntilMidnight() > 60) {
+                        clearInterval(intensiveCheck);
                     }
                 }, 5000);
             }
-        }, 60000); // Check if we're near midnight every minute
+        }, 60000);
     }
 
     createConfetti() {
-        // Create confetti container
-        const confettiContainer = document.createElement('div');
-        confettiContainer.className = 'confetti-container';
-        document.body.appendChild(confettiContainer);
+        const container = document.createElement('div');
+        container.className = 'confetti-container';
+        document.body.appendChild(container);
 
-        // Create multiple confetti pieces
-        const confettiCount = 50;
-        const shapes = ['circle', 'square', 'triangle', 'star'];
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe', '#fd79a8', '#00b894'];
-
-        for (let i = 0; i < confettiCount; i++) {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b'];
+        
+        for (let i = 0; i < 30; i++) {
             const confetti = document.createElement('div');
             confetti.className = 'confetti';
-            
-            // Random shape
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
-            confetti.classList.add(`confetti-${shape}`);
-            
-            // Random color
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.backgroundColor = color;
-            
-            // Random starting position
-            confetti.style.left = Math.random() * 100 + '%';
-            
-            // Random size
-            const size = Math.random() * 6 + 4; // 4-10px
-            confetti.style.width = size + 'px';
-            confetti.style.height = size + 'px';
-            
-            // Random animation duration
-            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2-4s
-            
-            // Random rotation
-            confetti.style.animationDelay = Math.random() * 1 + 's';
-            
-            confettiContainer.appendChild(confetti);
+            confetti.style.cssText = `
+                background: ${colors[i % colors.length]};
+                left: ${Math.random() * 100}%;
+                width: ${Math.random() * 6 + 4}px;
+                height: ${Math.random() * 6 + 4}px;
+                animation-duration: ${Math.random() * 2 + 2}s;
+                animation-delay: ${Math.random()}s;
+            `;
+            container.appendChild(confetti);
         }
 
-        // Remove confetti after animation
-        setTimeout(() => {
-            document.body.removeChild(confettiContainer);
-        }, 5000);
+        setTimeout(() => document.body.removeChild(container), 5000);
     }
 
     triggerConfetti() {
