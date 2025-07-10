@@ -323,11 +323,11 @@ class WordleGame {
             this.board[cellIndex].classList.add('invalid');
         }
         
-        // Create and show error message next to the row
+        // Create and show error message as centered overlay
         const errorMessage = document.createElement('div');
         errorMessage.className = 'row-error-message';
         errorMessage.textContent = 'Word not in dictionary!';
-        currentRow.appendChild(errorMessage);
+        document.body.appendChild(errorMessage);
         
         // Remove effects after 2 seconds
         setTimeout(() => {

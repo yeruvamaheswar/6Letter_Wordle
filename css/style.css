@@ -97,24 +97,26 @@ h1 {
 
 /* Error Messages */
 .row-error-message {
-    position: absolute;
-    right: -200px;
+    position: fixed;
     top: 50%;
-    transform: translateY(-50%);
-    background: #dc3545;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(220, 53, 69, 0.9);
     color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
     font-weight: bold;
     white-space: nowrap;
-    z-index: 100;
+    z-index: 1000;
     animation: errorFade 2s ease-in-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
 }
 
 @keyframes errorFade {
-    0%, 100% { opacity: 0; transform: translateY(-50%) translateX(-10px); }
-    10%, 90% { opacity: 1; transform: translateY(-50%) translateX(0); }
+    0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    10%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 /* Keyboard */
@@ -394,9 +396,9 @@ h1 {
     }
     
     .row-error-message {
-        right: -120px;
-        font-size: 11px;
-        padding: 5px 8px;
+        font-size: 14px;
+        padding: 10px 16px;
+        border-radius: 6px;
     }
     
     .status-info {
