@@ -329,9 +329,6 @@
                         <div class="stat-label">Next Word In</div>
                     </div>
                 </div>
-                <div style="margin-top: 20px;">
-                    <button onclick="clearTodayGameState()" class="danger" style="width: auto;">🗑️ Clear Today's Game State (Testing)</button>
-                </div>
             </div>
 
             <div class="panel-section">
@@ -546,12 +543,6 @@
             updateInterval = setInterval(updateStats, 60000); // Update every minute
         }
 
-        function clearTodayGameState() {
-            if (confirm('Clear today\'s game state? This will allow replaying today\'s puzzle. Use only for testing.')) {
-                wordManager.clearTodayGameState();
-                showMessage('passwordChangeMessage', 'Today\'s game state cleared! You can now replay today\'s puzzle.', 'success');
-            }
-        }
 
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', () => {
