@@ -97,10 +97,11 @@ h1 {
 
 /* Error Messages */
 .row-error-message {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
     background: rgba(220, 53, 69, 0.9);
     color: white;
     padding: 12px 20px;
@@ -115,8 +116,8 @@ h1 {
 }
 
 @keyframes errorFade {
-    0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    10%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8) !important; }
+    10%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1) !important; }
 }
 
 /* Keyboard */
