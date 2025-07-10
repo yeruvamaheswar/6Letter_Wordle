@@ -43,17 +43,18 @@ class DailyWordManager {
     }
 
     formatDate(date) {
-        // Convert to CST timezone (UTC-6, or UTC-5 during daylight saving)
-        // Get current time in CST
-        const now = new Date();
-        const isDST = this.isDaylightSavingTime(now);
-        const cstOffset = isDST ? -5 : -6; // CDT is UTC-5, CST is UTC-6
+        // Convert to CST/CDT timezone properly
+        // Use Intl.DateTimeFormat to get the correct CST/CDT date
+        const cstDate = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(date);
         
-        const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-        const cstDate = new Date(utc + (cstOffset * 3600000));
-        
-        // Format as YYYY-MM-DD
-        return cstDate.toISOString().split('T')[0];
+        // Convert MM/DD/YYYY to YYYY-MM-DD
+        const [month, day, year] = cstDate.split('/');
+        return `${year}-${month}-${day}`;
     }
 
     getTodaysDate() {
@@ -61,11 +62,30 @@ class DailyWordManager {
     }
 
     getCSTDate() {
+        // Get current time in CST/CDT timezone
         const now = new Date();
-        const isDST = this.isDaylightSavingTime(now);
-        const cstOffset = isDST ? -5 : -6; // CDT is UTC-5, CST is UTC-6
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        return new Date(utc + (cstOffset * 3600000));
+        const cstTime = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).formatToParts(now);
+        
+        // Build a proper Date object in CST timezone
+        const cstDate = new Date(
+            parseInt(cstTime.find(part => part.type === 'year').value),
+            parseInt(cstTime.find(part => part.type === 'month').value) - 1, // Month is 0-indexed
+            parseInt(cstTime.find(part => part.type === 'day').value),
+            parseInt(cstTime.find(part => part.type === 'hour').value),
+            parseInt(cstTime.find(part => part.type === 'minute').value),
+            parseInt(cstTime.find(part => part.type === 'second').value)
+        );
+        
+        return cstDate;
     }
 
     getDailyWord(date = null) {
